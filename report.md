@@ -19,6 +19,8 @@ This study addresses four specific research questions: (1) Does deep learning ou
 
 We conduct ten systematic experiments progressing from baseline traditional models through regularization variants to deep learning with hyperparameter optimization. Our hypothesis—that traditional ML should remain competitive given the small sample size (569 patients) and pre-engineered 30-dimensional feature space—remains open to evidence otherwise.
 
+**[INSERT: Notebook EDA Visualizations - Feature distributions, class balance bar chart, correlation matrix]**
+
 ## 2. Literature Review
 
 Logistic regression has established foundational performance in medical diagnosis for decades [5], with interpretability advantages—direct coefficient-feature correspondence—making it attractive for regulatory approval [6]. Random forests and support vector machines offer non-linearity and ensemble benefits but achieve only modest improvements over logistic regression on cancer datasets, suggesting many medical problems are substantially linearly separable [7], [8].
@@ -44,6 +46,8 @@ Early stopping monitored validation loss with patience=20. The modest architectu
 ## 4. Results
 
 Performance ranged from 96.49% (baseline logistic regression, Random Forest, linear SVM) to 99.12% (Sequential NN, LR=0.001, 38 epochs). The 2.63-point spread translates to three-patient differences in a 114-patient test set—potentially three missed diagnoses.
+
+**[INSERT: Model performance bar chart comparing all 13 models across accuracy, precision, recall]**
 
 ### Table 1: Model Performance Rankings
 
@@ -71,7 +75,13 @@ Basic Sequential NN (98.25%) immediately exceeded traditional ML by 0.88 points.
 
 The breakthrough emerged via Experiment 10's learning rate exploration: LR=0.01 achieved 98.25% with oscillatory validation loss (overshooting), LR=0.001 achieved 99.12% with smooth convergence (38 epochs), and LR=0.0001 achieved 97.37% with slow convergence (100 epochs, undershooting). Learning curves clearly demonstrated these dynamics: LR=0.001 descended smoothly to 0.10 loss; LR=0.01 oscillated 0.10-0.15; LR=0.0001 remained elevated above 0.15.
 
+**[INSERT: Experiment 10 learning curves - 3 subplots showing training/validation loss for LR=0.01, 0.001, 0.0001]**
+
 Confusion matrices revealed: best model (Exp 10B) achieved perfect true negatives (72/72 benign correct) and near-perfect true positives (41/42 malignant correct) with zero false positives—optimal clinical balance. ROC-AUC showed minimal differentiation among models (all >99.6%), indicating the core discriminative problem is largely solved; differences emerge in threshold-dependent precision-recall choices.
+
+**[INSERT: Confusion matrices - best classical ML (L1 Logistic) vs best DL (Exp 10B)]**
+
+**[INSERT: ROC curves - all 13 models overlaid with AUC scores in legend]**
 
 ## 5. Error Analysis
 
@@ -81,11 +91,15 @@ The dataset's moderate class imbalance (62.9% benign, 37.1% malignant) was addre
 
 Training-validation curve analysis showed minimal overfitting: training and validation losses tracked closely in most experiments. However, Experiment 7 (Sequential + L2) exhibited oscillatory validation loss over 98 epochs, suggesting unnecessary regularization. Indeed, Dropout and L2 provided zero improvement (identical 98.25% accuracy to unregularized baseline), challenging conventional wisdom about aggressive regularization for small datasets.
 
+**[INSERT: Experiments 5-7 learning curves - training/validation loss for basic, dropout, and L2 models]**
+
 The 64→32→16→1 architecture hit a capacity ceiling: sufficient to exceed linear models (98.25%+ accuracy) but unable to improve further through elaboration (Functional API regressed to 97.37%). The architecture occupies the optimal sweet spot—complex enough beyond linear models, simple enough to avoid overfitting on 455 training samples.
 
 The dataset exhibits fundamental linear separability (L1 logistic 97.37% matched or exceeded non-linear approaches). Yet neural networks achieved 1.75% higher accuracy, contradicting assertions that deep learning primarily benefits non-linear problems. The mechanism involves superior optimization dynamics: Adam optimizer with tuned learning rates finds better local minima than LBFGS (used by scikit-learn logistic regression). Neural network non-linearity functions as auxiliary flexibility for loss surface navigation rather than necessity.
 
 The best neural network (99.12% accuracy) sacrifices interpretability compared to transparent logistic regression (97.37%, coefficient-based explanations). In clinical deployment, this tradeoff matters: can hospitals defend black-box decisions to patients and regulators? Our pragmatic recommendation: deploy the optimized neural network as clinical decision support (not autonomous diagnosis) with explainability techniques (SHAP/LIME) addressing transparency concerns while preserving performance benefits.
+
+**[INSERT: Precision-Recall tradeoff scatter plot for all 13 models with annotations for best models]**
 
 Experiment 10's dramatic performance variation (LR=0.01: 98.25%, LR=0.001: 99.12%, LR=0.0001: 97.37%) highlights hyperparameter sensitivity. Practitioners selecting LR=0.01 would wrongly conclude 1.75% improvement unavailable. Only systematic exploration revealed learning rate optimization's impact exceeding architectural innovation. Fair method comparison requires devoted hyperparameter tuning for each approach—our gridsearch across logistic regression C-values and neural network learning rates ensured equitable evaluation.
 
