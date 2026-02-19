@@ -31,6 +31,15 @@ The machine learning community has invested substantial effort in deep neural ne
 
 This study addresses the following research questions: (1) On the Wisconsin Diagnostic Breast Cancer dataset, does deep learning demonstrably outperform traditional machine learning, and if so, by how much? (2) What architectural and hyperparameter choices prove most critical to performance? (3) Do traditional assumptions about the superiority of non-linear models hold empirically? (4) Can insights from this systematic comparison guide practitioners in resource-constrained clinical environments in choosing between paradigms?
 
+---
+
+![Figure 1 Placeholder](./figures/figure_1_clinical_workflow.png)
+
+**[INSERT FIGURE 1 HERE: Clinical Workflow Diagram]**
+*Figure 1: Typical breast cancer diagnosis workflow showing FNA collection, digital imaging, feature extraction, and computational classification. This diagram should illustrate the point at which AI/ML assists pathologists in decision-making.*
+
+---
+
 We structure our investigation as a series of ten carefully designed experiments, beginning with baseline traditional models, progressing through regularization variants, and culminating in deep learning architectures with systematic hyperparameter optimization. Our hypothesis, grounded in the relatively small sample size (569 patients) and the pre-engineered nature of features, anticipates that traditional ML should remain competitive, though we remain open to evidence of deep learning superiority.
 
 ---
@@ -70,6 +79,15 @@ Direct systematic comparisons between traditional ML and DL on the same datasets
 ### 3.1 Dataset and Data Characteristics
 
 The Breast Cancer Wisconsin Diagnostic dataset originates from the University of Wisconsin Hospital, compiled between 1993 and 1995 [12]. It comprises 569 patient cases (357 benign, 212 malignant) characterized by 30 numerical features derived from automated analysis of FNA cell images. These features represent statistical measurements including nuclear size, shape, texture, and other morphological properties, each computed in three forms: mean value across cells, standard error, and worst (largest) value observed. The dataset exhibits moderate class imbalance (62.9% benign, 37.1% malignant) and contains no missing values, presenting a clean, well-structured learning problem.
+
+---
+
+![Figure 2 Placeholder](./figures/figure_2_dataset_distribution.png)
+
+**[INSERT FIGURE 2 HERE: Dataset Distribution and Feature Statistics]**
+*Figure 2: Visualization showing (A) class distribution (benign vs. malignant case counts), (B) feature correlation heatmap showing relationships among the 30 features, and (C) box plots of top 6 discriminative features by class. This figure provides statistical overview of the data.*
+
+---
 
 ### 3.2 Preprocessing and Feature Engineering
 
@@ -119,6 +137,15 @@ Assessment metrics included accuracy, precision, recall (sensitivity), F1-score,
 
 Table 1 presents the complete ranking of all thirteen model configurations tested across the ten experiments. Performance ranged from 96.49% accuracy (baseline logistic regression, Random Forest, SVM Linear) to 99.12% accuracy (Sequential NN with learning rate 0.001, trained for 38 epochs). This 2.63 percentage point spread, while small in absolute terms, proves clinically meaningful when translated to the test set of 114 patients: the best model correctly classified 113/114 patients while the worst classified 110/114, a difference of three misclassifications—potentially three patients experiencing delayed diagnoses.
 
+---
+
+![Figure 3 Placeholder](./figures/figure_3_model_performance_comparison.png)
+
+**[INSERT FIGURE 3 HERE: Model Performance Comparison Bar Chart]**
+*Figure 3: Bar chart comparing all 13 model configurations across multiple metrics (Accuracy, Precision, Recall, F1-Score, ROC-AUC). Use color coding to distinguish classical ML (blue), basic neural networks (orange), and optimized neural networks (green). Include error bars or confidence intervals if available.*
+
+---
+
 | Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
 |-------|----------|-----------|--------|----------|---------|
 | Sequential NN (LR=0.001, 38 ep) | 99.12% | 100% | 97.62% | 98.80% | 99.77% |
@@ -153,17 +180,55 @@ Random Forest and Support Vector Machine with linear kernel both achieved 96.49%
 
 The basic Sequential neural network (Experiment 5) achieved 98.25% accuracy with 95.24% recall, immediately demonstrating a 0.88 percentage point advantage over the best traditional ML approach. Remarkably, Experiments 6 and 7, which added Dropout and L2 regularization respectively, achieved **identical** 98.25% accuracy despite different training durations (Dropout: 16 epochs, L2: 98 epochs) and different architectures. This finding signals an architectural ceiling—the 64→32→16→1 architecture hits a performance plateau at 98.25% regardless of regularization strategy.
 
+---
+
+![Figure 4 Placeholder](./figures/figure_4_learning_curves.png)
+
+**[INSERT FIGURE 4 HERE: Learning Curves for Neural Network Variants]**
+*Figure 4: Line plots showing training loss and validation loss over epochs for Experiments 5, 6, and 7 (basic, dropout, and L2 models). Graphs should demonstrate the architectural ceiling at 98.25% accuracy and show convergence patterns. Include epoch numbers on x-axis and loss values on y-axis.*
+
+---
+
+Experiment 8 tested architectural complexity via the Functional API with skip connections, intended to improve non-linear capacity. Instead, this model **regressed to 97.37% accuracy**, a 0.88 percentage point drop. Similarly, Experiment 9 testing data pipeline optimization (tf.data with prefetching) achieved 97.37% accuracy, another 0.88 percentage point regression. These failures of architectural and infrastructural complexity suggest that on small datasets, **simplicity prevails**—the modest feedforward architecture trained without advanced data handling outperforms sophisticated alternatives designed for large-scale production systems.
+
 Experiment 8 tested architectural complexity via the Functional API with skip connections, intended to improve non-linear capacity. Instead, this model **regressed to 97.37% accuracy**, a 0.88 percentage point drop. Similarly, Experiment 9 testing data pipeline optimization (tf.data with prefetching) achieved 97.37% accuracy, another 0.88 percentage point regression. These failures of architectural and infrastructural complexity suggest that on small datasets, **simplicity prevails**—the modest feedforward architecture trained without advanced data handling outperforms sophisticated alternatives designed for large-scale production systems.
 
 The breakthrough came in Experiment 10, systematically varying learning rate across three values: 0.01 (98.25%), 0.001 (99.12%), and 0.0001 (97.37%). The optimal learning rate of 0.001 achieved the best overall performance of 99.12% accuracy and 97.62% recall. Analysis of learning curves revealed the mechanism: LR=0.01 converged rapidly (16 epochs) but with oscillatory validation loss, suggesting overshooting during optimization. LR=0.0001 converged slowly and reached only 97.37% after 100 epochs, undershooting the optimal solution. LR=0.001 achieved smooth convergence in 38 epochs, finding the deepest local minimum.
+
+---
+
+![Figure 5 Placeholder](./figures/figure_5_learning_rate_comparison.png)
+
+**[INSERT FIGURE 5 HERE: Learning Rate Optimization (Experiment 10) Curves]**
+*Figure 5: Three subplots comparing training and validation loss trajectories for learning rates 0.01, 0.001, and 0.0001. Clearly annotate convergence behavior: LR=0.01 shows oscillatory loss (overshooting), LR=0.001 shows smooth convergence (optimal), and LR=0.0001 shows slow/incomplete convergence (undershooting). Include epochs on x-axis (0-100) and loss on y-axis.*
+
+---
 
 ### 4.5 Visualization of Key Results
 
 Learning curves from Experiment 10 demonstrated the critical role of learning rate. The training loss decreased monotonically for all three learning rates, indicating effective training. However, validation loss exhibited dramatically different trajectories: LR=0.001 descended smoothly to approximately 0.10, while LR=0.01 oscillated between 0.10 and 0.15, and LR=0.0001 remained elevated above 0.15 throughout training. These curves visually confirmed the quantitative performance differences.
 
+---
+
+![Figure 6 Placeholder](./figures/figure_6_confusion_matrices.png)
+
+**[INSERT FIGURE 6 HERE: Confusion Matrices for Top Models]**
+*Figure 6: 2×2 confusion matrices side-by-side for key models: (A) Best Traditional ML (L1 Logistic Regression, 97.37%), (B) Best Neural Network (Experiment 10B, 99.12%). Each matrix should show counts of True Negatives, False Positives, False Negatives, and True Positives. Use color intensity to highlight diagonal (correct predictions) vs. off-diagonal (errors).*
+
+---
+
 Confusion matrices revealed performance details beyond overall accuracy. The best model (Exp 10B) achieved perfect true negative rate (72/72 benign correctly identified) and near-perfect true positive rate (41/42 malignant correctly identified), with zero false positives. This precision-recall balance proved optimal for clinical application—no false alarms and nearly comprehensive cancer detection.
 
 ROC curves showed minimal differentiation among well-performing models, with all achieving ROC-AUC scores exceeding 99.6%. This finding reflects that for this dataset, the core discriminative problem has been largely solved—differences emerged not in ranking capability but in threshold-dependent precision/recall choices.
+
+---
+
+![Figure 7 Placeholder](./figures/figure_7_roc_curves.png)
+
+**[INSERT FIGURE 7 HERE: ROC Curves Comparison]**
+*Figure 7: ROC curves (sensitivity vs. 1-specificity) overlaid for all 13 models, with AUC values displayed in legend. Use distinct colors/line styles to distinguish classical ML models (solid lines) from neural network models (dashed lines). Should visually demonstrate that all models achieve excellent discrimination (curves near top-left corner) with minimal differentiation above 99.6% AUC.*
+
+---
 
 ---
 
@@ -179,6 +244,15 @@ Examining Experiment 10B (our best model), only one malignant case was misclassi
 
 The dataset exhibits moderate class imbalance (62.9% benign vs. 37.1% malignant). We addressed this through stratified sampling in train-test splitting, ensuring representative class distributions across splits. Our choice of multiple evaluation metrics (accuracy, precision, recall, F1) rather than relying solely on accuracy proves critical here—an accuracy-focused model could potentially achieve high performance by simply predicting benign for most cases.
 
+---
+
+![Figure 8 Placeholder](./figures/figure_8_precision_recall_tradeoff.png)
+
+**[INSERT FIGURE 8 HERE: Precision-Recall Tradeoff Analysis]**
+*Figure 8: Scatter plot showing precision vs. recall for all 13 models, with bubble size representing F1-score. Include horizontal and vertical reference lines at 95% for each metric. Use color coding to distinguish classical ML (blue), basic neural networks (orange), and optimized networks (green). Annotate best model (Exp 10B) and best classical ML (L1 LR) separately.*
+
+---
+
 Notably, accuracy ranks achieved reasonable performance despite imbalance, ranging from 96.49% to 99.12%. This range exceeds what naive benign prediction would achieve (62.9%), indicating that the feature engineering and models genuinely learned discriminative patterns. However, the differential performance in recall (90.48% worst to 97.62% best) reveals class imbalance effects: models struggle slightly more with the minority malignant class.
 
 ### 5.3 Overfitting and the Bias-Variance Tradeoff
@@ -192,6 +266,15 @@ The bias-variance tradeoff manifested as a capacity ceiling: the 64→32→16→
 ### 5.4 Why Neural Networks Succeeded Despite Linear Separability
 
 The dataset exhibits fundamental linear separability (confirmed by L1 logistic regression achieving 97.37% and outperforming non-linear Random Forest). Yet neural networks achieved 1.75% higher accuracy. This finding contradicts common assertions that deep learning primarily benefits non-linear problems. The mechanism appears to involve **superior optimization dynamics**: the Adam optimizer with carefully tuned learning rate finds better local minima than LBFGS (the optimization algorithm used by scikit-learn's logistic regression). The neural network's non-linearity acts not as a requirement but as an auxiliary flexibility that allows more expressive loss surface navigation.
+
+---
+
+![Figure 9 Placeholder](./figures/figure_9_optimization_landscape.png)
+
+**[INSERT FIGURE 9 HERE: Optimization Landscape Visualization]**
+*Figure 9: Conceptual illustration showing (A) how logistic regression (linear solver LBFGS) may get trapped in local minima, vs. (B) how neural networks with Adam optimizer and proper learning rate find deeper minima despite the dataset's linear separability. Could include contour plots of loss landscape with optimization trajectories, or conceptual diagrams with arrows showing search paths for each approach.*
+
+---
 
 ### 5.5 The Interpretability-Performance Tradeoff
 
@@ -218,6 +301,15 @@ In healthcare settings with strong regulatory requirements, limited computationa
 ### 6.2 When Deep Learning Adds Value
 
 The 1.75% accuracy and especially 2.38% recall advantage achieved by optimized neural networks (99.12% accuracy, 97.62% recall) proves clinically meaningful when scaled across populations. In large screening programs, this improvement translates to detecting additional cancers before they progress to advanced stages. The perfect precision (100% in best model) eliminates false alarms that would trigger unnecessary investigations.
+
+---
+
+![Figure 10 Placeholder](./figures/figure_10_clinical_impact.png)
+
+**[INSERT FIGURE 10 HERE: Clinical Impact Scaling]**
+*Figure 10: Visualization showing the clinical impact of 1.75% accuracy improvement across different screening population sizes. Main chart should show number of cancers missed (false negatives) for classical ML vs. DL approaches across 100, 1000, 5000, and 10000 patient populations. Include a separate inset showing cost-benefit analysis of improved detection rate vs. computational overhead of neural networks.*
+
+---
 
 Deep learning adds value through superior optimization—finding better local minima than classical gradient methods—rather than through non-linear capacity for this dataset. On problems where feature engineering remains difficult or where raw sensory data provides the primary information source (e.g., medical images), deep learning advantages would likely increase substantially.
 
@@ -291,6 +383,15 @@ This study demonstrates that systematic, methodical comparison of machine learni
 
 ### Appendix A: Experiment Summary Table
 
+---
+
+![Figure 11 Placeholder](./figures/figure_11_architecture_diagrams.png)
+
+**[INSERT FIGURE 11 HERE: Neural Network Architecture Diagrams]**
+*Figure 11: Visual diagrams of neural network architectures used in experiments: (A) Sequential baseline (64→32→16→1), (B) Sequential with Dropout (same with 0.3 dropout layers highlighted), (C) Functional API with skip connections (showing skip connection arrows). Use standard neural network node/layer visualization with input layer (30 neurons), hidden layers, connections, and output layer (1 neuron with sigmoid).*
+
+---
+
 All ten experiments with detailed results:
 
 | Experiment | Model Type | Accuracy | Precision | Recall | F1-Score | Key Parameter |
@@ -310,6 +411,15 @@ All ten experiments with detailed results:
 | EXP-10C | Sequential (LR=0.0001) | 97.37% | 100% | 92.86% | 96.30% | Too slow learning |
 
 ### Appendix B: Clinical Impact Summary
+
+---
+
+![Figure 12 Placeholder](./figures/figure_12_error_distribution.png)
+
+**[INSERT FIGURE 12 HERE: Error Distribution Across Models]**
+*Figure 12: Stacked bar chart (or grouped bar chart) showing the distribution of error types for each model: True Negatives (TN), False Positives (FP), False Negatives (FN), and True Positives (TP). Arrange models from best to worst accuracy on x-axis. Use color coding: green for correct predictions (TP, TN), red for errors (FP, FN). This visualization clearly shows which models struggle with false negatives (critical for clinical application).*
+
+---
 
 For the 42 malignant cases in the 114-patient test set:
 
